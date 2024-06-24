@@ -3,6 +3,9 @@
     "main": {
       "type": "main-product",
       "blocks": {
+        "product-services": {
+          "type": "product-services"
+        },
         "vendor": {
           "type": "text",
           "settings": {
@@ -209,6 +212,7 @@
   },
   "order": [
     "main",
+    "product-services",
     "image-with-text",
     "multicolumn",
     "related-products"

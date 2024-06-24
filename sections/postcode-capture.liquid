@@ -1,0 +1,203 @@
+<style>
+    #postcode-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width:120px;
+  }
+    .postcode-input {
+      text-transform:uppercase;
+      padding: 6px 4px;
+      margin-top: 12px;
+    }
+    .postcode-input::placeholder {
+      text-transform:initial;
+    }
+    .postcode-input:focus {
+    background-color: #fff;
+    outline: 0.5px solid #00A2FD;
+      border-radius:4px;
+  }
+  
+    .postcode-input:focus-visible {
+      outline-offset: 0px;
+      box-shadow:none;
+    }
+    .postcode-status {
+      display:none;
+      letter-spacing:initial;
+      color: green;
+      position: absolute;
+      top: 46px;
+      left: 38px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #d3ffd3;
+      border-radius: 4px;
+      padding: 0px 6px;
+    }
+    #unstyled {
+      border:none;
+    }
+  </style>
+  
+  {% comment %} Add a fetch to the existing date picker to see if it's Panther available or not {% endcomment %}
+  <div id="postcode-section" style="margin:auto;padding:10px;position:relative;">
+      <label for="postcode-input">
+      {% if section.settings.icon %}
+        {% assign icon_size_style = 'width:' | append: section.settings.icon_size | append: 'px;height:' | append: section.settings.icon_size | append: 'px;' %}
+        {% case section.settings.icon %}
+          {% when 'location-pin' %}
+            <div style="{{ icon_size_style }}">
+              {% render 'icon-location-pin' %}
+            </div>
+        {% endcase %}
+      {% endif %}
+    </label>
+    <div class="postcode-input-container; position:relative;">
+  
+    <input class="unstyled postcode-input" style="border:none;text-align:center;" type="text" name="postcode" placeholder="Enter postcode">
+    <span class="postcode-status">Saved</span>
+    </div>
+  </div>
+  
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const postcodeInputs = document.querySelectorAll('.postcode-input');
+    const postcodeStatuses = document.querySelectorAll('.postcode-status');
+  
+    // Function to update dynamic content based on the postcode
+    const updateDynamicContent = () => {
+      const pantherAvailability = localStorage.getItem('panther_availability');
+      
+      document.querySelectorAll('div[data-supplier]').forEach(card => {
+        const supplier = card.getAttribute('data-supplier');
+        if (pantherAvailability === "Available" && supplier === 'Panther') {
+          card.style.display = 'block';
+        } else if (pantherAvailability !== "Available" && supplier !== 'Panther') {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    };
+  
+    // Function to load the existing postcode from localStorage
+    const loadPostcode = () => {
+      const existingPostcode = localStorage.getItem('user_postcode');
+      if (existingPostcode) {
+        postcodeInputs.forEach(input => {
+          input.value = existingPostcode;
+        });
+      }
+    };
+  
+    // Function to save postcode and update all inputs
+    const updatePostcode = (postcode) => {
+      if (postcode.length >= 4) {
+        localStorage.setItem('user_postcode', postcode);
+  
+        fetch(`https://awodeliverydates-production.up.railway.app/getdeliverydates?postcode=${postcode}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.panther) {
+              localStorage.setItem('panther_availability', data.panther);
+              document.dispatchEvent(new CustomEvent('postcodeUpdated', { detail: { postcode, panther: data.panther } }));
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching delivery dates:', error);
+          });
+  
+        postcodeInputs.forEach(input => {
+          input.value = postcode;
+        });
+  
+        postcodeStatuses.forEach(status => {
+          status.style.display = 'block';
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 2000);
+        });
+  
+        updateDynamicContent();
+      }
+    };
+  
+    // Function to handle input events
+    const handleInputEvent = (event) => {
+      const input = event.target;
+      clearTimeout(input.typingTimer);
+      input.typingTimer = setTimeout(() => {
+        updatePostcode(input.value.trim());
+      }, 1800);
+    };
+  
+    // Function to handle enter key event
+    const handleEnterKeyEvent = (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        updatePostcode(event.target.value.trim());
+        event.target.blur();
+      }
+    };
+  
+    // Attach event listeners to each postcode input
+    postcodeInputs.forEach(input => {
+      input.typingTimer = null;
+      input.addEventListener('blur', () => updatePostcode(input.value.trim()));
+      input.addEventListener('keydown', handleEnterKeyEvent);
+      input.addEventListener('input', handleInputEvent);
+    });
+  
+    // Initial load of the postcode and content
+    loadPostcode();
+    updateDynamicContent();
+  });
+  
+  
+  
+  
+  </script>
+  
+  {% schema %}
+  {
+    "name": "Postcode Capture",
+    "settings": [
+      {
+        "type": "select",
+        "id": "icon",
+        "label": "Select an icon",
+        "options": [
+          {
+            "value": "location-pin",
+            "label": "Location Pin"
+          },
+          {
+            "value": "cart",
+            "label": "Cart"
+          }
+          // Add other icons here if needed
+        ],
+        "default": "location-pin"
+      },
+      {
+        "type": "range",
+        "id": "icon_size",
+        "label": "Icon Size",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "default": 24
+      }
+    ],
+    "blocks": [],
+    "presets": [
+      {
+        "name": "Postcode Capture"
+      }
+    ]
+  }
+  {% endschema %}
+  
