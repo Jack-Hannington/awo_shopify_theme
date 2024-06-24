@@ -1,37 +1,41 @@
-{% comment %} <div class="page-width" style="
-    background-color: {{ section.settings.background_color }};
-    color: {{ section.settings.text_color }};
-  ">
-  {% if product.metafields.custom.installation_options.value %}
-    {% assign installation_options = product.metafields.custom.installation_options.value %}
-    {% for item in installation_options %}
-      <div class="services-row" data-supplier="{{ item.supplied_by }}" data-product-id="{{ product.id }}" data-service-id="{{ all_products[item.associated_product].id }}" style="display: none;">
-        <h3>{{ item.service_name }}</h3>
-        <p class="add_on_supplier"><strong>Supplied by:</strong> {{ item.supplied_by }}</p>
-        <p><strong>Quantity per product:</strong> {{ item.quantity_per_product }}</p>
-        {% assign associated_product = all_products[item.associated_product] %}
-        <a href="{{ associated_product.url }}">
-          <img src="{{ associated_product.featured_image | image_url: width: 50 }}" alt="{{ associated_product.title }}">
-        </a>
-        <div class="product-card__info">
-          <h4 class="product-card__title">
-            <a href="{{ associated_product.url }}">{{ associated_product.title }}</a>
-          </h4>
-          <p class="product-card__price">
-            <span class="product-card__price">{{ associated_product.price | money }}</span>
-          </p>
 
-          <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}" data-parent-product-id="{{ product.id }}"> Add me
+{% comment %} 
 
+<div class="page-width">
+    {% if product.metafields.custom.installation_options.value %}
+      {% assign installation_options = product.metafields.custom.installation_options.value %}
+      {% for item in installation_options %}
+        <div class="services-row" data-supplier="{{ item.supplied_by }}" data-product-id="{{ product.id }}" data-service-id="{{ all_products[item.associated_product].id }}" style="display: none;">
+          <h3>{{ item.service_name }}</h3>
+          <p class="add_on_supplier"><strong>Supplied by:</strong> {{ item.supplied_by }}</p>
+          <p><strong>Quantity per product:</strong> {{ item.quantity_per_product }}</p>
+          {% assign associated_product = all_products[item.associated_product] %}
+          <a href="{{ associated_product.url }}">
+            <img src="{{ associated_product.featured_image | image_url: width: 50 }}" alt="{{ associated_product.title }}">
+          </a>
+          <div class="product-card__info">
+            <h4 class="product-card__title">
+              <a href="{{ associated_product.url }}">{{ associated_product.title }}</a>
+            </h4>
+            <p class="product-card__price">
+              <span class="product-card__price">{{ associated_product.price | money }}</span>
+            </p>
+  
+            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}" data-parent-product-id="{{ product.variants[0].id }}">
+            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}" data-parent-product-id="{{ product.variants[0].id }}"> 
+
+
+          </div>
         </div>
-      </div>
-    {% endfor %}
-  {% endif %}
-</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endcomment %}
 
-<button id="service-cart-button">Add</button> {% endcomment %}
+<script>console.log({{ product.variants[0].id | json }});</script>
 
 <script>
+
   document.addEventListener('DOMContentLoaded', () => {
     const productServiceOptions = document.querySelectorAll('.product-service-options');
     const serviceCartButton = document.getElementById('service-cart-button');
@@ -67,60 +71,47 @@
     });
 
     function addServiceToCart(serviceId, parentProductId) {
-      let storedData = JSON.parse(localStorage.getItem('product_services')) || {};
-
-      if (!storedData[parentProductId]) {
-        storedData[parentProductId] = {
-          product_id: parentProductId,
-          selected_product_services: []
-        };
-      }
-
-      if (!storedData[parentProductId].selected_product_services.includes(serviceId)) {
-        storedData[parentProductId].selected_product_services.push(serviceId);
-        localStorage.setItem('product_services', JSON.stringify(storedData));
-      }
-      fetch(window.Shopify.routes.root + 'cart/add.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          'items': [{
-            'id': serviceId,
-            'quantity': 1
-          }]
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Service added to cart:', data);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-    }
-
-    function removeServiceFromCart(serviceId, parentProductId) {
-      let storedData = JSON.parse(localStorage.getItem('product_services')) || {};
-
-      if (storedData[parentProductId]) {
-        storedData[parentProductId].selected_product_services = storedData[parentProductId].selected_product_services.filter(id => id !== serviceId);
-        if (storedData[parentProductId].selected_product_services.length > 0) {
-          localStorage.setItem('product_services', JSON.stringify(storedData));
-        } else {
-          delete storedData[parentProductId];
+        let storedData = JSON.parse(localStorage.getItem('product_services')) || {};
+      
+        if (!storedData[parentProductId]) {
+          storedData[parentProductId] = {
+            product_id: parentProductId,
+            selected_product_services: []
+          };
+        }
+      
+        if (!storedData[parentProductId].selected_product_services.includes(serviceId)) {
+          storedData[parentProductId].selected_product_services.push(serviceId);
           localStorage.setItem('product_services', JSON.stringify(storedData));
         }
+      
+        // Removed fetch call to add service to cart
       }
+      
 
-      // Note: Implement actual removal from the cart via Shopify API if required
-      console.log('Service removed from local storage, you may need to implement cart removal logic:', serviceId, parentProductId);
-    }
+      function removeServiceFromCart(serviceId, parentProductId) {
+        let storedData = JSON.parse(localStorage.getItem('product_services')) || {};
+      
+        if (storedData[parentProductId]) {
+          storedData[parentProductId].selected_product_services = storedData[parentProductId].selected_product_services.filter(id => id !== serviceId);
+          if (storedData[parentProductId].selected_product_services.length > 0) {
+            localStorage.setItem('product_services', JSON.stringify(storedData));
+          } else {
+            delete storedData[parentProductId];
+            localStorage.setItem('product_services', JSON.stringify(storedData));
+          }
+        }
+      
+        // Removed comment about removing from cart via Shopify API
+        console.log('Service removed from local storage:', serviceId, parentProductId);
+      }
+      
   });
-
-  //Need to get the cart and check if the same variant id and product id has been added.
-  // Show the options in the cart
+// Add attributes to sub-items to associate them with parent product
+  // Installation needs attribute assigning it to the parent product.
+  // Need to get the cart and check if the same variant id and product id has been added.
+  // Show the options in the cart - in order beneath the parent product. This can probably be done on page load. 
+  //Remove after checkout complete or X amount of hours? 
 </script>
 
 {% schema %}

@@ -19,9 +19,7 @@ if (!customElements.get('product-form')) {
       }
 
       onSubmitHandler(evt) {
-
         evt.preventDefault();
-
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
 
         this.handleErrorMessage();
@@ -48,12 +46,15 @@ if (!customElements.get('product-form')) {
         const variantId = formData.get('id'); // Current product variant ID
         const storedData = JSON.parse(localStorage.getItem('product_services')) || {};
 
+        console.log(variantId, storedData);
+
         if (storedData[variantId] && storedData[variantId].selected_product_services.length > 0) {
           const selectedServices = storedData[variantId].selected_product_services;
 
-          // Append selected services to formData
+          // Append each selected service to formData
           selectedServices.forEach(serviceId => {
-            formData.append('items[]', JSON.stringify({ id: serviceId, quantity: 1 }));
+            formData.append('items[][id]', serviceId);
+            formData.append('items[][quantity]', 1);
           });
         }
 
@@ -116,6 +117,7 @@ if (!customElements.get('product-form')) {
             this.querySelector('.loading__spinner').classList.add('hidden');
           });
       }
+
 
 
       handleErrorMessage(errorMessage = false) {
