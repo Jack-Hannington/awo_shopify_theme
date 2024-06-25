@@ -76,7 +76,6 @@
                   </th>
                 </tr>
               </thead>
-
               <tbody>
                 {%- for item in cart.items -%}
                   <tr class="cart-item" id="CartItem-{{ item.index | plus: 1 }}">
@@ -103,7 +102,6 @@
                       {%- endif -%}
 
                       <a href="{{ item.url }}" class="cart-item__name h4 break">{{ item.product.title | escape }}</a>
-
                       {%- if item.original_price != item.final_price -%}
                         <div class="cart-item__discounted-prices">
                           <span class="visually-hidden">
@@ -430,6 +428,7 @@
                       </div>
                     </td>
                   </tr>
+             
                 {%- endfor -%}
               </tbody>
             </table>

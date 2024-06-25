@@ -18,7 +18,7 @@
               <span class="product-card__price">{{ associated_product.price | money }}</span>
             </p>
            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}"  data-parent-product-id="{{ product.variants[0].id }}"> 
-           <input type="hidden" form="{{ 'product-form-' | append: section.id }}" id="parent-id" value="{{ product.variants[0].id }}" name="properties[Parent Variant ID]">
+           <input type="hidden" form="{{ 'product-form-' | append: section.id }}" id="parent-id" value="{{ product.variants[0].id }}" name="properties[Parent]">
              </div>
         </div>
       {% endfor %}
@@ -26,7 +26,7 @@
   </div> 
 
 
-<script>console.log({{ product.variants[0].id | json }});</script>
+<script>console.log({{ product| json }});</script>
 
 <script>
 

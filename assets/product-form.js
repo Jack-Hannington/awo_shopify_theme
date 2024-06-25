@@ -54,7 +54,7 @@ if (!customElements.get('product-form')) {
             formData.append('items[][id]', serviceId);
             formData.append('items[][quantity]', 1);
             // Append properties
-            formData.append('items[][properties][Parent Product ID]', variantId);
+            formData.append('items[][properties][Parent]', variantId);
           });
         }
 
