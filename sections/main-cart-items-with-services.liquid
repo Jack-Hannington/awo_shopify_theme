@@ -11,12 +11,17 @@
       </thead>
       <tbody>
         {%- for parent_item in cart.items -%}
+          <script>
+          console.log({{ parent_item | json }})
+          </script>
+      
           {% unless parent_item.properties.Variant == blank %}
             <!-- Parent Product Row -->
             <tr>
               <td><img src="{{ parent_item.image | img_url: 'small' }}" alt="{{ parent_item.product.title }}" /></td>
+              {% comment %} insert shopify image {% endcomment %}
               <td>{{ parent_item.product.title }}</td>
-              <td>
+              <td> 
                 <div class="quantity-selector">
                   <button class="quantity-decrease" data-key="{{ parent_item.key }}">-</button>
                   <input type="number" class="quantity-input" data-key="{{ parent_item.key }}" value="{{ parent_item.quantity }}" min="1" readonly />
@@ -30,7 +35,7 @@
                 </div>
               </td>
             </tr>
-  
+      
             <!-- Loop through service items for this parent -->
             {%- for service_item in cart.items -%}
               {% if service_item.properties.Parent == parent_item.properties.Variant %}
@@ -53,6 +58,29 @@
                 </tr>
               {% endif %}
             {%- endfor -%}
+      
+            <!-- Check if there are other related services not in cart -->
+            {% if parent_item.product.metafields.custom.installation_options.value %}
+              {% assign installation_options = parent_item.product.metafields.custom.installation_options.value %}
+              {% for option in installation_options %}
+                {% assign associated_product = all_products[option.associated_product] %}
+                {% assign service_in_cart = false %}
+                {%- for service_item in cart.items -%}
+                  {% if service_item.properties.Parent == parent_item.properties.Variant and service_item.product.id == associated_product.id %}
+                    {% assign service_in_cart = true %}
+                  {% endif %}
+                {%- endfor -%}
+                {% unless service_in_cart %}
+                  <tr>
+                    <td><img src="{{ associated_product.featured_image | img_url: 'small' }}" alt="{{ associated_product.title }}" /></td>
+                    <td>-- {{ associated_product.title }}</td>
+                    <td colspan="3">
+                      <button class="add-service" data-service-id="{{ associated_product.variants.first.id }}" data-parent-id="{{ parent_item.properties.Variant }}">Add Service</button>
+                    </td>
+                  </tr>
+                {% endunless %}
+              {% endfor %}
+            {% endif %}
           {% endunless %}
         {%- endfor -%}
       </tbody>
@@ -66,6 +94,11 @@
   </div>
   
   <script>
+
+    
+
+ 
+
     document.addEventListener('DOMContentLoaded', function() {
         function updateCart(key, quantity) {
           fetch('/cart/change.js', {
@@ -120,6 +153,15 @@
             updateCart(key, 0);
           });
         });
+
+        function getProductInfo(){
+          fetch(window.Shopify.routes.root + "products/appliance-world-washing-machine-installation.js")
+            .then(response => response.json())
+            .then(product => console.log(product));
+        }
+
+        getProductInfo();
+    
       });
       
       
