@@ -1,6 +1,3 @@
-
-{% comment %} 
-
 <div class="page-width">
     {% if product.metafields.custom.installation_options.value %}
       {% assign installation_options = product.metafields.custom.installation_options.value %}
@@ -20,17 +17,14 @@
             <p class="product-card__price">
               <span class="product-card__price">{{ associated_product.price | money }}</span>
             </p>
-  
-            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}" data-parent-product-id="{{ product.variants[0].id }}">
-            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}" data-parent-product-id="{{ product.variants[0].id }}"> 
-
-
-          </div>
+           <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}"  data-parent-product-id="{{ product.variants[0].id }}"> 
+           <input type="hidden" form="{{ 'product-form-' | append: section.id }}" id="parent-id" value="{{ product.variants[0].id }}" name="properties[Parent Variant ID]">
+             </div>
         </div>
       {% endfor %}
     {% endif %}
-  </div>
-{% endcomment %}
+  </div> 
+
 
 <script>console.log({{ product.variants[0].id | json }});</script>
 
@@ -107,7 +101,7 @@
       }
       
   });
-// Add attributes to sub-items to associate them with parent product
+  // Add attributes to sub-items to associate them with parent product
   // Installation needs attribute assigning it to the parent product.
   // Need to get the cart and check if the same variant id and product id has been added.
   // Show the options in the cart - in order beneath the parent product. This can probably be done on page load. 

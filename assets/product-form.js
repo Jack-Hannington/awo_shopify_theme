@@ -1,5 +1,3 @@
-
-
 if (!customElements.get('product-form')) {
   customElements.define(
     'product-form',
@@ -55,6 +53,8 @@ if (!customElements.get('product-form')) {
           selectedServices.forEach(serviceId => {
             formData.append('items[][id]', serviceId);
             formData.append('items[][quantity]', 1);
+            // Append properties
+            formData.append('items[][properties][Parent Product ID]', variantId);
           });
         }
 
@@ -117,6 +117,7 @@ if (!customElements.get('product-form')) {
             this.querySelector('.loading__spinner').classList.add('hidden');
           });
       }
+
 
 
 
