@@ -75,12 +75,12 @@
                   <script>console.log({{ service_item| json }});</script>
                 <tr>
                   <td><img src="{{ service_item.image | img_url: 'small' }}" alt="{{ service_item.product.title }}" /></td>
-                  <td>-- {{ service_item.product.title }} {{ service_item.properties.Parent }}</td>
+                  <td>-- {{ service_item.product.title }} {{ service_item.product.description }}</td>
                   <td>
                     <div class="quantity-selector">
-                      <button class="quantity-decrease" data-key="{{ service_item.key }}">-</button>
+                      {% comment %} <button class="quantity-decrease" data-key="{{ service_item.key }}">-</button>
                       <input type="number" class="quantity-input" data-key="{{ service_item.key }}" value="{{ service_item.quantity }}" min="1" readonly />
-                      <button class="quantity-increase" data-key="{{ service_item.key }}">+</button>
+                      <button class="quantity-increase" data-key="{{ service_item.key }}">+</button> {% endcomment %}
                     </div>
                   </td>
                   <td>{{ service_item.final_line_price | money }}</td>
@@ -107,7 +107,7 @@
                 {% unless service_in_cart %}
                   <tr class="service-item-row" data-supplied-by="{{ option.supplied_by }}" data-location="{{ option.location | downcase }}">
                     <td><img src="{{ associated_product.featured_image | img_url: 'small' }}" alt="{{ associated_product.title }}" /></td>
-                    <td>-- {{ associated_product.title }}</td>
+                    <td>-- {{ associated_product.title }} {{ associated_product.description }}</td>
                     <td colspan="3">
                       <button class="add-service" data-service-id="{{ associated_product.variants.first.id }}" data-parent-id="{{ parent_item.id }}">Add Service</button>
                     </td>
