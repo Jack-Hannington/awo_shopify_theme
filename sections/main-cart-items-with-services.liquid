@@ -1,3 +1,40 @@
+<style>
+  .loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000; /* Ensure it is above other elements */
+    display: none; /* Initially hidden */
+  }
+  
+  .loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    display:block!important;
+    animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+</style>
+
+<div class="loader-overlay">
+  <div class="loader"></div>
+</div>
+
+
 <div class="page-width">
     <table style="width:100%;">
       <thead>
@@ -11,16 +48,12 @@
       </thead>
       <tbody>
         {%- for parent_item in cart.items -%}
-          <script>
-          console.log({{ parent_item | json }})
-          </script>
-      
-          {% unless parent_item.properties.Variant == blank %}
+          {% if parent_item.properties.Parent == blank %}
+            <script>console.log({{ parent_item| json }});</script>
             <!-- Parent Product Row -->
             <tr>
               <td><img src="{{ parent_item.image | img_url: 'small' }}" alt="{{ parent_item.product.title }}" /></td>
-              {% comment %} insert shopify image {% endcomment %}
-              <td>{{ parent_item.product.title }}</td>
+              <td>{{ parent_item.product.title }} {{ parent_item.id }}</td>
               <td> 
                 <div class="quantity-selector">
                   <button class="quantity-decrease" data-key="{{ parent_item.key }}">-</button>
@@ -38,10 +71,11 @@
       
             <!-- Loop through service items for this parent -->
             {%- for service_item in cart.items -%}
-              {% if service_item.properties.Parent == parent_item.properties.Variant %}
+                {% if service_item.properties.Parent == parent_item.properties.Variant %}
+                  <script>console.log({{ service_item| json }});</script>
                 <tr>
                   <td><img src="{{ service_item.image | img_url: 'small' }}" alt="{{ service_item.product.title }}" /></td>
-                  <td>-- {{ service_item.product.title }}</td>
+                  <td>-- {{ service_item.product.title }} {{ service_item.properties.Parent }}</td>
                   <td>
                     <div class="quantity-selector">
                       <button class="quantity-decrease" data-key="{{ service_item.key }}">-</button>
@@ -71,19 +105,25 @@
                   {% endif %}
                 {%- endfor -%}
                 {% unless service_in_cart %}
-                  <tr>
+                  <tr class="service-item-row" data-supplied-by="{{ option.supplied_by }}" data-location="{{ option.location | downcase }}">
                     <td><img src="{{ associated_product.featured_image | img_url: 'small' }}" alt="{{ associated_product.title }}" /></td>
                     <td>-- {{ associated_product.title }}</td>
                     <td colspan="3">
-                      <button class="add-service" data-service-id="{{ associated_product.variants.first.id }}" data-parent-id="{{ parent_item.properties.Variant }}">Add Service</button>
+                      <button class="add-service" data-service-id="{{ associated_product.variants.first.id }}" data-parent-id="{{ parent_item.id }}">Add Service</button>
                     </td>
                   </tr>
                 {% endunless %}
               {% endfor %}
             {% endif %}
-          {% endunless %}
+            
+            
+                      
+          {% endif %}
         {%- endfor -%}
       </tbody>
+      
+      
+      
       <tfoot>
         <tr>
           <td colspan="4"><strong>Total</strong></td>
@@ -94,76 +134,139 @@
   </div>
   
   <script>
-
-    
-
- 
-
     document.addEventListener('DOMContentLoaded', function() {
-        function updateCart(key, quantity) {
-          fetch('/cart/change.js', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              id: key,
-              quantity: quantity
-            })
-          })
-          .then(response => response.json())
-          .then(cart => {
-            console.log(cart);
-            location.reload(); // Reload the page to reflect the changes
-          })
-          .catch(error => console.error('Error:', error));
-        }
       
-        document.querySelectorAll('.quantity-decrease').forEach(function(button) {
-          button.addEventListener('click', function() {
-            const key = this.getAttribute('data-key');
-            const input = this.closest('.quantity-selector').querySelector('.quantity-input');
-            let quantity = parseInt(input.value, 10);
-      
-            if (quantity > 1) {
-              quantity--;
-              input.value = quantity;
-              updateCart(key, quantity);
+          const pantherAvailability = localStorage.getItem('panther_availability');
+          document.querySelectorAll('.service-item-row').forEach(function(row) {
+            const location = row.getAttribute('data-location');
+            console.log(location)
+            if (pantherAvailability === 'Available' && (location === 'local' || location === 'Local')) {
+              row.style.display = 'none';
             }
           });
-        });
+    
+   
       
-        document.querySelectorAll('.quantity-increase').forEach(function(button) {
-          button.addEventListener('click', function() {
-            const key = this.getAttribute('data-key');
-            const input = this.closest('.quantity-selector').querySelector('.quantity-input');
-            let quantity = parseInt(input.value, 10);
+     
       
-            quantity++;
+
+
+      const loaderOverlay = document.querySelector('.loader-overlay');
+      
+      function showLoader() {
+        loaderOverlay.style.display = 'flex';
+      }
+      
+      function hideLoader() {
+        loaderOverlay.style.display = 'none';
+      }
+      
+      function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
+      
+      function updateCart(key, quantity) {
+        showLoader();
+        fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            id: key,
+            quantity: quantity
+          })
+        })
+        .then(response => response.json())
+        .then(cart => {
+          
+          location.reload(); // Reload the page to reflect the changes
+        })
+        .catch(error => console.error('Error:', error));
+        // Removed .finally(() => hideLoader()); to ensure loader stays visible until reload
+      }
+      
+      function addService(variantId, properties) {
+        showLoader();
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            id: variantId,
+            quantity: 1,
+            properties: properties
+          })
+        })
+        .then(response => response.json())
+        .then(cart => {
+          
+          location.reload(); // Reload the page to reflect the changes
+        })
+        .catch(error => console.error('Error:', error));
+        // Removed .finally(() => hideLoader()); to ensure loader stays visible until reload
+      }
+      
+      document.querySelectorAll('.quantity-decrease').forEach(function(button) {
+        button.addEventListener('click', debounce(function() {
+          const key = this.getAttribute('data-key');
+          const input = this.closest('.quantity-selector').querySelector('.quantity-input');
+          let quantity = parseInt(input.value, 10);
+          
+          if (quantity > 1) {
+            quantity--;
             input.value = quantity;
             updateCart(key, quantity);
-          });
-        });
-      
-        document.querySelectorAll('.remove-item').forEach(function(button) {
-          button.addEventListener('click', function() {
-            const key = this.getAttribute('data-key');
-      
-            updateCart(key, 0);
-          });
-        });
-
-        function getProductInfo(){
-          fetch(window.Shopify.routes.root + "products/appliance-world-washing-machine-installation.js")
-            .then(response => response.json())
-            .then(product => console.log(product));
-        }
-
-        getProductInfo();
-    
+          }
+        }, 300));
       });
       
+      document.querySelectorAll('.quantity-increase').forEach(function(button) {
+        button.addEventListener('click', debounce(function() {
+          const key = this.getAttribute('data-key');
+          const input = this.closest('.quantity-selector').querySelector('.quantity-input');
+          let quantity = parseInt(input.value, 10);
+          
+          quantity++;
+          input.value = quantity;
+          updateCart(key, quantity);
+        }, 300));
+      });
       
+      document.querySelectorAll('.remove-item').forEach(function(button) {
+        button.addEventListener('click', debounce(function() {
+          const key = this.getAttribute('data-key');
+          
+          updateCart(key, 0);
+        }, 300));
+      });
+      
+      document.querySelectorAll('.add-service').forEach(function(button) {
+        button.addEventListener('click', debounce(function() {
+          const serviceId = this.getAttribute('data-service-id');
+          const parentId = this.getAttribute('data-parent-id');
+          
+          const properties = {
+            Parent: parentId
+          };
+          
+          addService(serviceId, properties);
+        }, 300));
+      });
+      
+      // Hide the loader by default on page load
+      hideLoader();
+    });
+
+    
   </script>
+  
+  
   

@@ -19,6 +19,7 @@
             </p>
            <input type="checkbox" class="product-service-options" data-service-id="{{ associated_product.variants.first.id }}"  data-parent-product-id="{{ product.variants[0].id }}"> 
            <input type="hidden" form="{{ 'product-form-' | append: section.id }}" id="parent-id" value="{{ product.variants[0].id }}" name="properties[Parent]">
+           <input type="hidden" style="display:none;" form="{{ 'product-form-' | append: section.id }}" id="parent-id" value="{{ product.variants[0].id }}" name="properties[Parent]">
              </div>
         </div>
       {% endfor %}
