@@ -134,6 +134,13 @@
         "padding_bottom": 12
       }
     },
+    "product_services_F3rkNL": {
+      "type": "product-services",
+      "settings": {
+        "background_color": "#ffffff",
+        "text_color": "#000000"
+      }
+    },
     "image-with-text": {
       "type": "image-with-text",
       "blocks": {
@@ -231,20 +238,13 @@
         "padding_top": 36,
         "padding_bottom": 28
       }
-    },
-    "product_services_F3rkNL": {
-      "type": "product-services",
-      "settings": {
-        "background_color": "#ffffff",
-        "text_color": "#000000"
-      }
     }
   },
   "order": [
     "main",
+    "product_services_F3rkNL",
     "image-with-text",
     "multicolumn",
-    "related-products",
-    "product_services_F3rkNL"
+    "related-products"
   ]
 }
