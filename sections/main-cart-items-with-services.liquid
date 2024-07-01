@@ -29,12 +29,10 @@
   }
   
 </style>
-
+<script src="{{ 'cart-services.js' | asset_url }}" defer="defer"></script>
 <div class="loader-overlay">
   <div class="loader"></div>
 </div>
-
-
 <div class="page-width">
     <table style="width:100%;">
       <thead>
@@ -68,7 +66,6 @@
                 </div>
               </td>
             </tr>
-      
             <!-- Loop through service items for this parent -->
             {%- for service_item in cart.items -%}
                 {% if service_item.properties.Parent == parent_item.properties.Variant %}
@@ -77,11 +74,6 @@
                   <td><img src="{{ service_item.image | img_url: 'small' }}" alt="{{ service_item.product.title }}" /></td>
                   <td>-- {{ service_item.product.title }} {{ service_item.product.description }}</td>
                   <td>
-                    <div class="quantity-selector">
-                      {% comment %} <button class="quantity-decrease" data-key="{{ service_item.key }}">-</button>
-                      <input type="number" class="quantity-input" data-key="{{ service_item.key }}" value="{{ service_item.quantity }}" min="1" readonly />
-                      <button class="quantity-increase" data-key="{{ service_item.key }}">+</button> {% endcomment %}
-                    </div>
                   </td>
                   <td>{{ service_item.final_line_price | money }}</td>
                   <td>
@@ -92,7 +84,6 @@
                 </tr>
               {% endif %}
             {%- endfor -%}
-      
             <!-- Check if there are other related services not in cart -->
             {% if parent_item.product.metafields.custom.installation_options.value %}
               {% assign installation_options = parent_item.product.metafields.custom.installation_options.value %}
@@ -114,16 +105,10 @@
                   </tr>
                 {% endunless %}
               {% endfor %}
-            {% endif %}
-            
-            
-                      
+            {% endif %}        
           {% endif %}
         {%- endfor -%}
       </tbody>
-      
-      
-      
       <tfoot>
         <tr>
           <td colspan="4"><strong>Total</strong></td>
@@ -133,140 +118,6 @@
     </table>
   </div>
   
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      
-          const pantherAvailability = localStorage.getItem('panther_availability');
-          document.querySelectorAll('.service-item-row').forEach(function(row) {
-            const location = row.getAttribute('data-location');
-            console.log(location)
-            if (pantherAvailability === 'Available' && (location === 'local' || location === 'Local')) {
-              row.style.display = 'none';
-            }
-          });
-    
-   
-      
-     
-      
-
-
-      const loaderOverlay = document.querySelector('.loader-overlay');
-      
-      function showLoader() {
-        loaderOverlay.style.display = 'flex';
-      }
-      
-      function hideLoader() {
-        loaderOverlay.style.display = 'none';
-      }
-      
-      function debounce(func, delay) {
-        let timeout;
-        return function(...args) {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-      }
-      
-      function updateCart(key, quantity) {
-        showLoader();
-        fetch('/cart/change.js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            id: key,
-            quantity: quantity
-          })
-        })
-        .then(response => response.json())
-        .then(cart => {
-          
-          location.reload(); // Reload the page to reflect the changes
-        })
-        .catch(error => console.error('Error:', error));
-        // Removed .finally(() => hideLoader()); to ensure loader stays visible until reload
-      }
-      
-      function addService(variantId, properties) {
-        showLoader();
-        fetch('/cart/add.js', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            id: variantId,
-            quantity: 1,
-            properties: properties
-          })
-        })
-        .then(response => response.json())
-        .then(cart => {
-          
-          location.reload(); // Reload the page to reflect the changes
-        })
-        .catch(error => console.error('Error:', error));
-        // Removed .finally(() => hideLoader()); to ensure loader stays visible until reload
-      }
-      
-      document.querySelectorAll('.quantity-decrease').forEach(function(button) {
-        button.addEventListener('click', debounce(function() {
-          const key = this.getAttribute('data-key');
-          const input = this.closest('.quantity-selector').querySelector('.quantity-input');
-          let quantity = parseInt(input.value, 10);
-          
-          if (quantity > 1) {
-            quantity--;
-            input.value = quantity;
-            updateCart(key, quantity);
-          }
-        }, 300));
-      });
-      
-      document.querySelectorAll('.quantity-increase').forEach(function(button) {
-        button.addEventListener('click', debounce(function() {
-          const key = this.getAttribute('data-key');
-          const input = this.closest('.quantity-selector').querySelector('.quantity-input');
-          let quantity = parseInt(input.value, 10);
-          
-          quantity++;
-          input.value = quantity;
-          updateCart(key, quantity);
-        }, 300));
-      });
-      
-      document.querySelectorAll('.remove-item').forEach(function(button) {
-        button.addEventListener('click', debounce(function() {
-          const key = this.getAttribute('data-key');
-          
-          updateCart(key, 0);
-        }, 300));
-      });
-      
-      document.querySelectorAll('.add-service').forEach(function(button) {
-        button.addEventListener('click', debounce(function() {
-          const serviceId = this.getAttribute('data-service-id');
-          const parentId = this.getAttribute('data-parent-id');
-          
-          const properties = {
-            Parent: parentId
-          };
-          
-          addService(serviceId, properties);
-        }, 300));
-      });
-      
-      // Hide the loader by default on page load
-      hideLoader();
-    });
-
-    
-  </script>
-  
+ 
   
   
